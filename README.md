@@ -2,6 +2,8 @@
 
 A configurable, host-authoritative peer-to-peer party game designed for static hosting on GitHub Pages.
 
+**Play:** [customjack.github.io/party_quips](https://customjack.github.io/party_quips/)
+
 ## Run locally
 
 ```bash
@@ -25,7 +27,14 @@ with `npm run peer:server` and `npm run dev:local`.
 
 ## Deploy
 
-Push to `main`, then select **GitHub Actions** as the Pages source in the repository settings. The included workflow builds and publishes `dist`.
+For the first deployment, open **Settings → Pages** in GitHub and select
+**GitHub Actions** under **Build and deployment → Source**.
+
+After that one-time setup, every push to `main` automatically runs
+`.github/workflows/deploy-pages.yml`, builds the app, and publishes `dist` to
+[customjack.github.io/party_quips](https://customjack.github.io/party_quips/).
+You can also start a deployment manually from **Actions → Deploy to GitHub
+Pages → Run workflow**.
 
 ## Architecture
 
