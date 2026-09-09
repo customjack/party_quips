@@ -1,0 +1,374 @@
+{
+  "schemaVersion": 2,
+  "id": "default-pack",
+  "name": "Default pack",
+  "description": "The built-in prompt collection.",
+  "author": "Party Quips",
+  "tags": [
+    "default"
+  ],
+  "prompts": [
+    {
+      "id": "default-prompt-001",
+      "text": "The worst thing to hear from your GPS",
+      "safetyQuips": [
+        "Recalculating your life choices.",
+        "Turn around when existentially possible.",
+        "You have arrived at regret."
+      ]
+    },
+    {
+      "id": "default-prompt-002",
+      "text": "A rejected name for a fancy restaurant",
+      "safetyQuips": [
+        "The Gilded Spork",
+        "Chez Microwave",
+        "Table for None"
+      ]
+    },
+    {
+      "id": "default-prompt-003",
+      "text": "The real reason the dinosaurs disappeared",
+      "safetyQuips": [
+        "They saw the sequel coming.",
+        "Budget cuts at the asteroid department.",
+        "Too many meetings."
+      ]
+    },
+    {
+      "id": "default-prompt-004",
+      "text": "A terrible slogan for a mattress company",
+      "safetyQuips": [
+        "Sleep is for subscribers.",
+        "Now with extra lumps.",
+        "Dream responsibly."
+      ]
+    },
+    {
+      "id": "default-prompt-005",
+      "text": "Something you should never whisper at a wedding",
+      "safetyQuips": [
+        "I object to the seating chart.",
+        "The cake knows what you did.",
+        "This is my other wedding."
+      ]
+    },
+    {
+      "id": "default-prompt-006",
+      "text": "The least useful superpower",
+      "safetyQuips": [
+        "Knowing exactly when toast will pop.",
+        "Invisibility, but only in group photos.",
+        "Talking to printers."
+      ]
+    },
+    {
+      "id": "default-prompt-007",
+      "text": "A surprising item to find in your dentist’s office",
+      "safetyQuips": [
+        "A loyalty card for cavities.",
+        "The dentist’s emotional-support drill.",
+        "One suspiciously fresh apple."
+      ]
+    },
+    {
+      "id": "default-prompt-008",
+      "text": "The title of a movie nobody asked for",
+      "safetyQuips": [
+        "Somehow, The Spreadsheet 2",
+        "Fast and Mildly Curious",
+        "The Last Reboot Again"
+      ]
+    },
+    {
+      "id": "default-prompt-009",
+      "text": "The worst theme for a birthday party",
+      "safetyQuips": [
+        "Mandatory tax preparation.",
+        "Haunted office supplies.",
+        "Beige: the celebration."
+      ]
+    },
+    {
+      "id": "default-prompt-010",
+      "text": "A suspicious thing for a flight attendant to announce",
+      "safetyQuips": [
+        "The wings are more of a suggestion.",
+        "Please ignore the other airplane.",
+        "Who packed the parachute piñata?"
+      ]
+    },
+    {
+      "id": "default-prompt-011",
+      "text": "The one feature nobody wants in a smart refrigerator",
+      "safetyQuips": [
+        "A tiny landlord.",
+        "Push notifications from your leftovers.",
+        "A camera that judges your snacks."
+      ]
+    },
+    {
+      "id": "default-prompt-012",
+      "text": "A bad name for a pirate ship",
+      "safetyQuips": [
+        "The Mild Discomfort",
+        "S.S. Tax Audit",
+        "The Damp Sock"
+      ]
+    },
+    {
+      "id": "default-prompt-013",
+      "text": "The secret item on a billionaire’s grocery list",
+      "safetyQuips": [
+        "One banana, for scale.",
+        "Store-brand moon dust.",
+        "A coupon they will never use."
+      ]
+    },
+    {
+      "id": "default-prompt-014",
+      "text": "What your dog calls you behind your back",
+      "safetyQuips": [
+        "The Tall Treat Dispenser",
+        "Captain Walks-A-Lot",
+        "The One Who Pays Rent"
+      ]
+    },
+    {
+      "id": "default-prompt-015",
+      "text": "A terrible password that is somehow very secure",
+      "safetyQuips": [
+        "password-final-FINAL-2",
+        "incorrect-but-confident",
+        "hunter2electricboogaloo"
+      ]
+    },
+    {
+      "id": "default-prompt-016",
+      "text": "The weirdest thing to put on a résumé",
+      "safetyQuips": [
+        "Fluent in reply-all.",
+        "Can identify most chairs.",
+        "References available upon bribery."
+      ]
+    },
+    {
+      "id": "default-prompt-017",
+      "text": "An honest slogan for the internet",
+      "safetyQuips": [
+        "Terms and conditions apply to breathing.",
+        "Now loading your free time.",
+        "Please accept all emotional cookies."
+      ]
+    },
+    {
+      "id": "default-prompt-018",
+      "text": "A rejected Olympic event",
+      "safetyQuips": [
+        "Competitive waiting.",
+        "Synchronized shrugging.",
+        "Extreme paperwork."
+      ]
+    },
+    {
+      "id": "default-prompt-019",
+      "text": "The worst possible fortune cookie message",
+      "safetyQuips": [
+        "Reply hazy, blame management.",
+        "You will meet a tall inconvenience.",
+        "Outlook cloudy with meetings."
+      ]
+    },
+    {
+      "id": "default-prompt-020",
+      "text": "The real reason socks disappear in the dryer",
+      "safetyQuips": [
+        "They unionized.",
+        "A portal to the sock dimension.",
+        "The dryer demands tribute."
+      ]
+    },
+    {
+      "id": "default-prompt-021",
+      "text": "A phrase that ruins a first date immediately",
+      "safetyQuips": [
+        "I brought my tax returns.",
+        "My mom is live-streaming this.",
+        "So, about your credit score…"
+      ]
+    },
+    {
+      "id": "default-prompt-022",
+      "text": "The least inspiring motivational poster",
+      "safetyQuips": [
+        "You tried, technically.",
+        "Hang in there until payroll.",
+        "Dream smaller, avoid traffic."
+      ]
+    },
+    {
+      "id": "default-prompt-023",
+      "text": "A warning label for adulthood",
+      "safetyQuips": [
+        "May contain responsibilities.",
+        "Assembly required; instructions missing.",
+        "Do not operate before coffee."
+      ]
+    },
+    {
+      "id": "default-prompt-024",
+      "text": "What aliens find most confusing about Earth",
+      "safetyQuips": [
+        "Why we clap when planes land.",
+        "Decorative towels.",
+        "The phrase ‘circle back.’"
+      ]
+    },
+    {
+      "id": "default-prompt-025",
+      "text": "A terrible name for a new social network",
+      "safetyQuips": [
+        "Oops, All Uncles",
+        "Terms of Disservice",
+        "ReplyAll.gov"
+      ]
+    },
+    {
+      "id": "default-prompt-026",
+      "text": "The last thing you want a surgeon to say",
+      "safetyQuips": [
+        "Has anyone seen my tutorial?",
+        "This button usually works.",
+        "That beep is probably normal."
+      ]
+    },
+    {
+      "id": "default-prompt-027",
+      "text": "A very specific law that should exist",
+      "safetyQuips": [
+        "Every meeting needs a snack break.",
+        "Tuesday may be skipped by majority vote.",
+        "All socks must have legal representation."
+      ]
+    },
+    {
+      "id": "default-prompt-028",
+      "text": "The strangest item in a hotel lost and found",
+      "safetyQuips": [
+        "A single left roller skate.",
+        "Three increasingly worried hats.",
+        "The concept of punctuality."
+      ]
+    },
+    {
+      "id": "default-prompt-029",
+      "text": "A rejected flavor of ice cream",
+      "safetyQuips": [
+        "Wet envelope.",
+        "Executive vanilla.",
+        "Garlic surprise sorbet."
+      ]
+    },
+    {
+      "id": "default-prompt-030",
+      "text": "The true purpose of decorative pillows",
+      "safetyQuips": [
+        "Protecting couches from happiness.",
+        "An obstacle course for naps.",
+        "Making beds look nervous."
+      ]
+    },
+    {
+      "id": "default-prompt-031",
+      "text": "A bad opening line for a detective novel",
+      "safetyQuips": [
+        "It was a dark and billable night.",
+        "The clue had unsubscribed.",
+        "Nobody expected the paperwork."
+      ]
+    },
+    {
+      "id": "default-prompt-032",
+      "text": "The world’s least threatening villain",
+      "safetyQuips": [
+        "Captain Mild Concern",
+        "The Passive-Aggressor",
+        "Doctor Eventually"
+      ]
+    },
+    {
+      "id": "default-prompt-033",
+      "text": "Something never said by a competent babysitter",
+      "safetyQuips": [
+        "The children are probably nearby.",
+        "How hard can bedtime be?",
+        "I sold the emergency snacks."
+      ]
+    },
+    {
+      "id": "default-prompt-034",
+      "text": "A new holiday nobody would celebrate",
+      "safetyQuips": [
+        "National Check Your Spam Day",
+        "Bring Your Chair to Work Day",
+        "Annual Tuesday"
+      ]
+    },
+    {
+      "id": "default-prompt-035",
+      "text": "A terrible feature for the next smartphone",
+      "safetyQuips": [
+        "A screen on the back of the screen.",
+        "Subscription-based volume buttons.",
+        "AI-powered pocket lint."
+      ]
+    },
+    {
+      "id": "default-prompt-036",
+      "text": "The worst song to play at a funeral",
+      "safetyQuips": [
+        "The Final Countdown, indefinitely.",
+        "Another One Bites the Dust—acoustic.",
+        "Yakety Sax, respectfully."
+      ]
+    },
+    {
+      "id": "default-prompt-037",
+      "text": "What ghosts complain about",
+      "safetyQuips": [
+        "Drafty hallways.",
+        "People saying ‘boo’ first.",
+        "The afterlife’s Wi-Fi."
+      ]
+    },
+    {
+      "id": "default-prompt-038",
+      "text": "The title of your inaccurate autobiography",
+      "safetyQuips": [
+        "A Series of Manageable Errors",
+        "Mostly Awake",
+        "Authorized Biography Pending"
+      ]
+    },
+    {
+      "id": "default-prompt-039",
+      "text": "A bad thing to yell during a magic show",
+      "safetyQuips": [
+        "Pick a card—no, the other fire alarm.",
+        "This rabbit owes me money.",
+        "Everyone remain suspiciously calm."
+      ]
+    },
+    {
+      "id": "default-prompt-040",
+      "text": "The unofficial motto of your hometown",
+      "safetyQuips": [
+        "Parking is a personality trait.",
+        "We close whenever we feel like it.",
+        "Home of the world’s okayest roundabout."
+      ]
+    }
+  ],
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "updatedAt": "1970-01-01T00:00:00.000Z"
+}
