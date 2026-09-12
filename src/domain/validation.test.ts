@@ -322,6 +322,44 @@ describe("SettingsValidator", () => {
     expect((session.state as { phase: string }).phase).toBe("voting");
   });
 
+  it("stores typing without broadcasting a full snapshot per keystroke", () => {
+    let broadcasts = 0;
+    const session = Object.create(HostSession.prototype) as {
+      state: Record<string, unknown>;
+      broadcast: () => void;
+    };
+    session.state = {
+      phase: "answering",
+      game: {
+        assignments: [
+          {
+            id: "prompt",
+            playerIds: ["a"],
+            answers: {},
+            lockedPlayerIds: [],
+          },
+        ],
+      },
+    };
+    session.broadcast = () => {
+      broadcasts += 1;
+    };
+    HostSession.prototype.setAnswer.call(
+      session as unknown as HostSession,
+      "a",
+      "prompt",
+      "instant local typing",
+    );
+    expect(
+      (
+        session.state as {
+          game: { assignments: Array<{ answers: Record<string, string> }> };
+        }
+      ).game.assignments[0].answers.a,
+    ).toBe("instant local typing");
+    expect(broadcasts).toBe(0);
+  });
+
   it("allows reactions across quips while enforcing the per-quip limit", () => {
     const session = Object.create(HostSession.prototype) as {
       state: Record<string, unknown>;

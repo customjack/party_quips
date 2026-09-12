@@ -167,7 +167,6 @@ export class HostSession extends GameSession {
     )
       return;
     a.answers[playerId] = answer.slice(0, ANSWER_MAX_LENGTH);
-    this.broadcast();
   }
   setLock(playerId: string, assignmentId: string, locked: boolean) {
     if (this.state.phase !== "answering") return;
@@ -498,7 +497,7 @@ export class HostSession extends GameSession {
         x.payload.reaction,
       );
     else if (x.type === "REQUEST_SNAPSHOT")
-      this.send(c, { type: "SNAPSHOT", payload: this.state });
+      this.send(c, { type: "SNAPSHOT", payload: this.viewFor(c.peer) });
   }
   private cleanProfile(p: ProfilePayload): ProfilePayload {
     return {
@@ -606,9 +605,21 @@ export class HostSession extends GameSession {
   }
   private broadcast() {
     this.state.serverTime = Date.now();
-    const e: HostEvent = { type: "SNAPSHOT", payload: this.state };
-    this.connections.forEach((c) => this.send(c, e));
-    this.emit(this.state);
+    this.connections.forEach((c) =>
+      this.send(c, { type: "SNAPSHOT", payload: this.viewFor(c.peer) }),
+    );
+    this.emit(this.viewFor("host"));
+  }
+  private viewFor(playerId: string): LobbySnapshot {
+    const snapshot = structuredClone(this.state);
+    if (snapshot.phase === "answering" && snapshot.game) {
+      snapshot.game.assignments.forEach((assignment) => {
+        assignment.answers = Object.fromEntries(
+          Object.entries(assignment.answers).filter(([id]) => id === playerId),
+        );
+      });
+    }
+    return snapshot;
   }
 }
 export class ClientSession extends GameSession {

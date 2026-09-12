@@ -58,6 +58,8 @@ export function GameView({
     [reactionMenuTarget, setReactionMenuTarget] = useState<string | null>(null),
     [connectionState, setConnectionState] =
       useState<ConnectionState>("connecting");
+  const draftValues = useRef<Record<string, string>>({});
+  const answerSyncTimers = useRef<Record<string, number>>({});
   const game = snapshot.game!,
     me = snapshot.players.find((p) => p.id === session.localPlayerId),
     round = snapshot.settings.rounds[game.roundIndex],
@@ -69,6 +71,13 @@ export function GameView({
       unsubscribe();
     };
   }, [session]);
+  useEffect(
+    () => () =>
+      Object.values(answerSyncTimers.current).forEach((timer) =>
+        clearTimeout(timer),
+      ),
+    [],
+  );
   useEffect(() => {
     setSelected([]);
     setReactionMenuTarget(null);
@@ -86,14 +95,25 @@ export function GameView({
       );
     return () => timers.forEach((timer) => clearTimeout(timer));
   }, [snapshot.phase, current?.id, round.revealStyle, round.revealTimeSeconds]);
-  const setAnswer = (id: string, value: string) => {
-    setDrafts((d) => ({ ...d, [id]: value }));
+  const syncAnswer = (id: string, value = draftValues.current[id] ?? "") => {
+    clearTimeout(answerSyncTimers.current[id]);
+    delete answerSyncTimers.current[id];
     isHost
       ? (session as HostSession).setAnswer("host", id, value)
       : (session as ClientSession).setAnswer(id, value);
   };
+  const setAnswer = (id: string, value: string) => {
+    draftValues.current[id] = value;
+    setDrafts((d) => ({ ...d, [id]: value }));
+    clearTimeout(answerSyncTimers.current[id]);
+    answerSyncTimers.current[id] = window.setTimeout(
+      () => syncAnswer(id, value),
+      120,
+    );
+  };
   const setLock = (id: string, locked: boolean) => {
     ping(locked ? 660 : 400);
+    if (locked) syncAnswer(id);
     isHost
       ? (session as HostSession).setLock("host", id, locked)
       : (session as ClientSession).setLock(id, locked);
@@ -217,7 +237,7 @@ export function GameView({
           {!me?.spectator &&
             mine.map((a) => {
               const locked = a.lockedPlayerIds.includes(me?.id ?? ""),
-                value = a.answers[me?.id ?? ""] ?? drafts[a.id] ?? "";
+                value = drafts[a.id] ?? a.answers[me?.id ?? ""] ?? "";
               return (
                 <div
                   className={`answer-box ${locked ? "is-locked" : ""}`}
@@ -230,6 +250,7 @@ export function GameView({
                     maxLength={ANSWER_MAX_LENGTH}
                     placeholder="Your answer…"
                     onChange={(e) => setAnswer(a.id, e.target.value)}
+                    onBlur={() => syncAnswer(a.id)}
                   />
                   <div className="answer-tools">
                     <small>
