@@ -63,7 +63,8 @@ export abstract class GameSession {
     this.peer?.destroy();
   }
 }
-export type ConnectionState = "connecting" | "connected" | "reconnecting" | "disconnected";
+export type ConnectionState =
+  "connecting" | "connected" | "reconnecting" | "disconnected";
 export class HostSession extends GameSession {
   private connections = new Map<string, DataConnection>();
   private state: LobbySnapshot;
@@ -119,7 +120,12 @@ export class HostSession extends GameSession {
       if (e.type === "unavailable-id" && !this.hasOpened)
         this.fail("Room code collision. Try hosting again.");
       else if (e.type === "unavailable-id") this.reconnectSignaling();
-      else if (["network", "socket-error", "socket-closed", "server-error"].includes(e.type)) this.reconnectSignaling();
+      else if (
+        ["network", "socket-error", "socket-closed", "server-error"].includes(
+          e.type,
+        )
+      )
+        this.reconnectSignaling();
       else this.fail(e.message);
     });
   }
@@ -231,19 +237,33 @@ export class HostSession extends GameSession {
       !REACTIONS.some((item) => item.id === reaction)
     )
       return;
-    const assignment =
-        this.state.game.assignments[this.state.game.voteIndex],
+    const assignment = this.state.game.assignments[this.state.game.voteIndex],
       player = this.state.players.find((item) => item.id === playerId);
     if (
       !assignment ||
       assignment.id !== assignmentId ||
       !player ||
-      assignment.reactions[playerId] ||
       answerPlayerId === playerId ||
       !assignment.playerIds.includes(answerPlayerId)
     )
       return;
-    assignment.reactions[playerId] = { targetPlayerId: answerPlayerId, reaction };
+    const given = assignment.reactions[playerId] ?? [],
+      totalLimit = this.state.settings.maxReactionsPerPlayer,
+      targetLimit = this.state.settings.maxReactionsPerTarget,
+      within = (limit: typeof totalLimit, count: number) =>
+        limit === "unlimited" || count < limit;
+    if (
+      !within(totalLimit, given.length) ||
+      !within(
+        targetLimit,
+        given.filter((item) => item.targetPlayerId === answerPlayerId).length,
+      )
+    )
+      return;
+    assignment.reactions[playerId] = [
+      ...given,
+      { targetPlayerId: answerPlayerId, reaction },
+    ];
     const totals = (this.state.game.reactionTotals[answerPlayerId] ??= {});
     totals[reaction] = (totals[reaction] ?? 0) + 1;
     if (this.state.game.scoredAssignmentIds.includes(assignment.id)) {
@@ -386,7 +406,10 @@ export class HostSession extends GameSession {
       this.connections.set(c.peer, c);
       if (previous && previous !== c) previous.close();
       const player = this.state.players.find((item) => item.id === c.peer);
-      if (player) { player.connected = true; this.broadcast(); }
+      if (player) {
+        player.connected = true;
+        this.broadcast();
+      }
     });
     c.on("data", (d) => this.handle(c, d as ClientCommand));
     c.on("close", () => this.markDisconnected(c.peer, c));
@@ -445,11 +468,7 @@ export class HostSession extends GameSession {
         connected: true,
         isHost: false,
       });
-      if (
-        this.state.phase !== "lobby" &&
-        !p.spectator &&
-        this.state.game
-      )
+      if (this.state.phase !== "lobby" && !p.spectator && this.state.game)
         this.state.game.scores[c.peer] ??= 0;
       this.broadcast();
     } else if (x.type === "UPDATE_PROFILE") {
@@ -522,9 +541,11 @@ export class HostSession extends GameSession {
         assignment.reactions[nextId] = assignment.reactions[previousId];
         delete assignment.reactions[previousId];
       }
-      Object.values(assignment.reactions).forEach((item) => {
-        if (item.targetPlayerId === previousId) item.targetPlayerId = nextId;
-      });
+      Object.values(assignment.reactions)
+        .flat()
+        .forEach((item) => {
+          if (item.targetPlayerId === previousId) item.targetPlayerId = nextId;
+        });
     });
     if (previousId in game.scores) {
       game.scores[nextId] = game.scores[previousId];
@@ -540,9 +561,7 @@ export class HostSession extends GameSession {
       );
     });
     game.lastAwards = game.lastAwards.map((award) =>
-      award.playerId === previousId
-        ? { ...award, playerId: nextId }
-        : award,
+      award.playerId === previousId ? { ...award, playerId: nextId } : award,
     );
     const timer = this.dropTimers.get(previousId);
     if (timer) clearTimeout(timer);
@@ -555,7 +574,8 @@ export class HostSession extends GameSession {
     if (!player) return;
     player.connected = false;
     this.broadcast();
-    const prior = this.dropTimers.get(id); if (prior) clearTimeout(prior);
+    const prior = this.dropTimers.get(id);
+    if (prior) clearTimeout(prior);
     this.dropTimers.set(
       id,
       window.setTimeout(() => {

@@ -134,6 +134,7 @@ export class GameEngine {
           pv * round.pointsPerVote + sv * round.spectatorVotePoints,
         bonusPoints = pb + sb,
         reactionPoints = Object.values(a.reactions)
+          .flat()
           .filter((reaction) => reaction.targetPlayerId === id)
           .reduce(
             (sum, reaction) =>

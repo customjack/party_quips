@@ -11,6 +11,8 @@ describe("SettingsValidator", () => {
     expect(defaultGameTemplate.rounds[0].playerBonusThreshold).toBe(100);
     expect(defaultGameTemplate.reactionPoints.brilliant).toBe(5);
     expect(defaultGameTemplate.reactionPoints.blunder).toBe(-5);
+    expect(defaultGameTemplate.maxReactionsPerPlayer).toBe("unlimited");
+    expect(defaultGameTemplate.maxReactionsPerTarget).toBe(1);
     expect(
       defaultGameTemplate.rounds.every(
         (round) => round.endVotingWhenAllVotesIn,
@@ -143,7 +145,7 @@ describe("SettingsValidator", () => {
           answers: { a: "A", b: "B" },
           lockedPlayerIds: ["a", "b"],
           reactions: {
-            c: { targetPlayerId: "a", reaction: "brilliant" as const },
+            c: [{ targetPlayerId: "a", reaction: "brilliant" as const }],
           },
         },
       ],
@@ -250,9 +252,33 @@ describe("SettingsValidator", () => {
         participantsCanVote: false,
       },
       players = [
-        { id: "a", name: "A", avatar: "✦", avatarColor: "#fff", connected: true, spectator: false, isHost: false },
-        { id: "b", name: "B", avatar: "★", avatarColor: "#fff", connected: true, spectator: false, isHost: false },
-        { id: "c", name: "C", avatar: "●", avatarColor: "#fff", connected: true, spectator: false, isHost: false },
+        {
+          id: "a",
+          name: "A",
+          avatar: "✦",
+          avatarColor: "#fff",
+          connected: true,
+          spectator: false,
+          isHost: false,
+        },
+        {
+          id: "b",
+          name: "B",
+          avatar: "★",
+          avatarColor: "#fff",
+          connected: true,
+          spectator: false,
+          isHost: false,
+        },
+        {
+          id: "c",
+          name: "C",
+          avatar: "●",
+          avatarColor: "#fff",
+          connected: true,
+          spectator: false,
+          isHost: false,
+        },
       ],
       session = Object.create(HostSession.prototype) as {
         state: Record<string, unknown>;
@@ -294,5 +320,50 @@ describe("SettingsValidator", () => {
     );
 
     expect((session.state as { phase: string }).phase).toBe("voting");
+  });
+
+  it("allows reactions across quips while enforcing the per-quip limit", () => {
+    const session = Object.create(HostSession.prototype) as {
+      state: Record<string, unknown>;
+      broadcast: () => void;
+    };
+    session.state = {
+      players: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      settings: defaultGameTemplate,
+      phase: "voting",
+      game: {
+        roundIndex: 0,
+        voteIndex: 0,
+        votes: {},
+        scores: { a: 0, b: 0, c: 0 },
+        reactionTotals: { a: {}, b: {}, c: {} },
+        scoredAssignmentIds: [],
+        lastAwards: [],
+        assignments: [
+          {
+            id: "matchup",
+            playerIds: ["a", "b"],
+            answers: { a: "A", b: "B" },
+            lockedPlayerIds: ["a", "b"],
+            reactions: {},
+          },
+        ],
+      },
+    };
+    session.broadcast = () => undefined;
+    const react = HostSession.prototype.react;
+    react.call(session as unknown as HostSession, "c", "matchup", "a", "good");
+    react.call(session as unknown as HostSession, "c", "matchup", "a", "book");
+    react.call(
+      session as unknown as HostSession,
+      "c",
+      "matchup",
+      "b",
+      "brilliant",
+    );
+    const state = session.state as {
+      game: { assignments: Array<{ reactions: Record<string, unknown[]> }> };
+    };
+    expect(state.game.assignments[0].reactions.c).toHaveLength(2);
   });
 });

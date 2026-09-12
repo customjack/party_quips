@@ -1,5 +1,10 @@
 import { defaultGameTemplate, starterPack } from "../domain/defaults";
-import { REACTIONS, type GameSettings, type Prompt, type PromptPack } from "../domain/types";
+import {
+  REACTIONS,
+  type GameSettings,
+  type Prompt,
+  type PromptPack,
+} from "../domain/types";
 
 class JsonStore<T> {
   constructor(
@@ -78,6 +83,20 @@ const normalizeGame = (
     showAuthorsBeforeVoting: value.showAuthorsBeforeVoting ?? false,
     revealAuthorsAfterVoting: value.revealAuthorsAfterVoting ?? true,
     scoreboardTimeSeconds: value.scoreboardTimeSeconds ?? 10,
+    maxReactionsPerPlayer:
+      value.maxReactionsPerPlayer == null
+        ? defaultGameTemplate.maxReactionsPerPlayer
+        : value.maxReactionsPerPlayer === "unlimited" ||
+            Number(value.maxReactionsPerPlayer) <= 0
+          ? "unlimited"
+          : Math.max(1, Number(value.maxReactionsPerPlayer)),
+    maxReactionsPerTarget:
+      value.maxReactionsPerTarget == null
+        ? defaultGameTemplate.maxReactionsPerTarget
+        : value.maxReactionsPerTarget === "unlimited" ||
+            Number(value.maxReactionsPerTarget) <= 0
+          ? "unlimited"
+          : Math.max(1, Number(value.maxReactionsPerTarget)),
     reactionPoints: Object.fromEntries(
       REACTIONS.map((reaction) => [
         reaction.id,
@@ -147,8 +166,7 @@ export class TemplateRepository {
     const templates = this.all();
     const copy = {
       ...structuredClone(template),
-      id:
-        template.id === "default-game" ? crypto.randomUUID() : template.id,
+      id: template.id === "default-game" ? crypto.randomUUID() : template.id,
     };
     const index = templates.findIndex((item) => item.id === copy.id);
     if (index >= 0) templates[index] = copy;

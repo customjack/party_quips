@@ -5,12 +5,38 @@ import {
   REACTIONS,
   type GameSettings,
   type PromptPack,
+  type ReactionLimit,
   type RoundSettings,
 } from "../domain/types";
 import { ReactionIcon } from "../resources/ReactionIcon";
 import { SettingsValidator } from "../domain/validation";
 import { downloadJson, type TemplateRepository } from "../services/storage";
 import { NumberField, RoundEditor, Toggle } from "./HostSetup";
+
+const ReactionLimitField = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: ReactionLimit;
+  onChange: (value: ReactionLimit) => void;
+}) => (
+  <label className="mini-field">
+    <span>
+      {label} <small>0 = unlimited</small>
+    </span>
+    <input
+      type="number"
+      min="0"
+      value={value === "unlimited" ? 0 : value}
+      onChange={(event) => {
+        const next = Math.max(0, Number(event.target.value) || 0);
+        onChange(next === 0 ? "unlimited" : next);
+      }}
+    />
+  </label>
+);
 
 export function RulesEditor({
   settings,
@@ -286,8 +312,25 @@ export function RulesEditor({
               <details className="settings-subsection">
                 <summary>Reaction scoring</summary>
                 <p>
-                  Each player may send one locked reaction per matchup.
+                  Limits reset for each matchup. Reactions are locked after they
+                  are sent.
                 </p>
+                <div className="settings-grid">
+                  <ReactionLimitField
+                    label="Total reactions per player"
+                    value={settings.maxReactionsPerPlayer}
+                    onChange={(maxReactionsPerPlayer) =>
+                      onSettings({ ...settings, maxReactionsPerPlayer })
+                    }
+                  />
+                  <ReactionLimitField
+                    label="Reactions per quip"
+                    value={settings.maxReactionsPerTarget}
+                    onChange={(maxReactionsPerTarget) =>
+                      onSettings({ ...settings, maxReactionsPerTarget })
+                    }
+                  />
+                </div>
                 <div className="reaction-settings-grid">
                   {REACTIONS.map((reaction) => (
                     <div className="reaction-setting" key={reaction.id}>

@@ -45,6 +45,7 @@ export const REACTIONS = [
 ] as const;
 export type ReactionId = (typeof REACTIONS)[number]["id"];
 export type Reaction = { targetPlayerId: string; reaction: ReactionId };
+export type ReactionLimit = number | "unlimited";
 export type Prompt = { id: string; text: string; safetyQuips: string[] };
 export type PromptPack = {
   schemaVersion: 2;
@@ -97,6 +98,8 @@ export type GameSettings = {
   showAuthorsBeforeVoting: boolean;
   revealAuthorsAfterVoting: boolean;
   scoreboardTimeSeconds: number;
+  maxReactionsPerPlayer: ReactionLimit;
+  maxReactionsPerTarget: ReactionLimit;
   reactionPoints: Record<ReactionId, number>;
   rounds: RoundSettings[];
 };
@@ -115,7 +118,7 @@ export type Assignment = {
   playerIds: string[];
   answers: Record<string, string>;
   lockedPlayerIds: string[];
-  reactions: Record<string, Reaction>;
+  reactions: Record<string, Reaction[]>;
 };
 export type GameRuntime = {
   roundIndex: number;

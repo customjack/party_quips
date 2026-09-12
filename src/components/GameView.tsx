@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Check,
-  Lock,
-  SmilePlus,
-  Unlock,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
+import { Check, Lock, SmilePlus, Unlock, Volume2, VolumeX } from "lucide-react";
 import {
   ANSWER_MAX_LENGTH,
   REACTIONS,
@@ -287,7 +280,7 @@ export function GameView({
       me && !round.participantsCanVote && current.playerIds.includes(me.id),
     ),
     hasVoted = Boolean(me && game.votes[me.id]),
-    myReaction = me ? current.reactions[me.id] : undefined,
+    myReactions = me ? (current.reactions[me.id] ?? []) : [],
     eligibleAnswers = Object.keys(current.answers).filter(
       (id) => id !== me?.id,
     ),
@@ -340,12 +333,32 @@ export function GameView({
                   : 0,
               reactionCounts = REACTIONS.map((reaction) => ({
                 ...reaction,
-                count: Object.values(current.reactions).filter(
-                  (item) =>
-                    item.targetPlayerId === id &&
-                    item.reaction === reaction.id,
-                ).length,
+                count: Object.values(current.reactions)
+                  .flat()
+                  .filter(
+                    (item) =>
+                      item.targetPlayerId === id &&
+                      item.reaction === reaction.id,
+                  ).length,
               })).filter((reaction) => reaction.count);
+            const reactionsForAnswer = myReactions.filter(
+                (item) => item.targetPlayerId === id,
+              ).length,
+              withinReactionLimit = (
+                limit: typeof snapshot.settings.maxReactionsPerPlayer,
+                count: number,
+              ) => limit === "unlimited" || count < limit,
+              canReact =
+                me &&
+                id !== me.id &&
+                withinReactionLimit(
+                  snapshot.settings.maxReactionsPerPlayer,
+                  myReactions.length,
+                ) &&
+                withinReactionLimit(
+                  snapshot.settings.maxReactionsPerTarget,
+                  reactionsForAnswer,
+                );
             const removeVote = () => {
               const removeAt = selected.lastIndexOf(id);
               if (removeAt >= 0)
@@ -363,7 +376,9 @@ export function GameView({
               >
                 <button
                   className="answer-choice"
-                  disabled={!isVoting || hasVoted || cannotVote || id === me?.id}
+                  disabled={
+                    !isVoting || hasVoted || cannotVote || id === me?.id
+                  }
                   onClick={() => {
                     if (
                       selected.length < maxVotes &&
@@ -401,15 +416,13 @@ export function GameView({
                         {award.total >= 0 ? "+" : ""}
                         {award.total.toLocaleString()}
                         {award.bonusPoints > 0 && (
-                          <em>
-                            ★ BONUS +{award.bonusPoints.toLocaleString()}
-                          </em>
+                          <em>★ BONUS +{award.bonusPoints.toLocaleString()}</em>
                         )}
                       </span>
                     )}
                   </div>
                 )}
-                {!isReveal && me && id !== me.id && !myReaction && (
+                {!isReveal && canReact && (
                   <>
                     <button
                       className="reaction-trigger"

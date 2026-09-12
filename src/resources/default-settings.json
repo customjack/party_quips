@@ -9,6 +9,8 @@
   "showAuthorsBeforeVoting": false,
   "revealAuthorsAfterVoting": true,
   "scoreboardTimeSeconds": 10,
+  "maxReactionsPerPlayer": "unlimited",
+  "maxReactionsPerTarget": 1,
   "reactionPoints": {
     "brilliant": 5,
     "great-move": 5,
