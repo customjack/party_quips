@@ -139,6 +139,11 @@ export function Lobby({
       ? (session as HostSession).updateHost(p)
       : (session as ClientSession).updateProfile(p);
   };
+  const kickPlayer = (player: NonNullable<typeof me>) => {
+    if (!isHost || player.isHost) return;
+    if (confirm(`Remove “${player.name}” from the game?`))
+      (session as HostSession).kickPlayer(player.id);
+  };
   return (
     <main className="page shell lobby-page">
       <header className="topbar">
@@ -215,6 +220,17 @@ export function Lobby({
                     )}
                   </span>
                 </div>
+                {isHost && !p.isHost && (
+                  <button
+                    type="button"
+                    className="kick-player-button"
+                    title={`Remove ${p.name}`}
+                    aria-label={`Remove ${p.name}`}
+                    onClick={() => kickPlayer(p)}
+                  >
+                    <X />
+                  </button>
+                )}
               </article>
             ))}
             {Array.from(
@@ -239,6 +255,17 @@ export function Lobby({
               {spectators.map((p) => (
                 <span key={p.id}>
                   {p.avatar} {p.name}
+                  {isHost && (
+                    <button
+                      type="button"
+                      className="kick-player-button"
+                      title={`Remove ${p.name}`}
+                      aria-label={`Remove ${p.name}`}
+                      onClick={() => kickPlayer(p)}
+                    >
+                      <X />
+                    </button>
+                  )}
                 </span>
               ))}
             </div>

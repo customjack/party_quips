@@ -2155,3 +2155,106 @@ section.panel > select {
     transform: none;
   }
 }
+
+/* Host moderation */
+.kick-player-button {
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  padding: 0;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border: 1.5px solid #c9c4cc;
+  border-radius: 7px;
+  background: #fff;
+  color: #8b2f2f;
+  cursor: pointer;
+}
+.kick-player-button:hover {
+  border-color: #8b2f2f;
+  background: #ffe9e6;
+}
+.kick-player-button svg {
+  width: 16px;
+  height: 16px;
+}
+.spectator-list > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.spectator-list .kick-player-button {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  background: transparent;
+}
+.host-player-menu {
+  position: relative;
+  flex: none;
+}
+.host-player-menu > summary {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ffffff55;
+  border-radius: 7px;
+  cursor: pointer;
+  list-style: none;
+}
+.host-player-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.host-player-menu > summary svg {
+  width: 18px;
+  height: 18px;
+}
+.host-player-menu-popover {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(260px, calc(100vw - 30px));
+  padding: 10px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  box-shadow: 4px 5px 0 var(--ink);
+}
+.game-header .host-player-menu-popover > b {
+  display: block;
+  margin: 2px 4px 8px;
+  font: 800 13px "Space Grotesk";
+}
+.host-player-menu-popover button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.host-player-menu-popover button:hover {
+  background: #ffe9e6;
+  color: #8b2f2f;
+}
+.game-header .host-player-menu-popover span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.host-player-menu-popover button svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}

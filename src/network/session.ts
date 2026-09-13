@@ -146,6 +146,27 @@ export class HostSession extends GameSession {
     };
     this.broadcast();
   }
+  kickPlayer(playerId: string) {
+    const player = this.state.players.find((item) => item.id === playerId);
+    if (!player || player.isHost) return;
+    this.state.players = this.state.players.filter(
+      (item) => item.id !== playerId,
+    );
+    this.removePlayerFromGame(playerId);
+    const connection = this.connections.get(playerId);
+    if (connection) {
+      this.send(connection, {
+        type: "KICKED",
+        payload: { reason: "The host removed you from the game." },
+      });
+      this.connections.delete(playerId);
+      window.setTimeout(() => connection.close(), 50);
+    }
+    const timer = this.dropTimers.get(playerId);
+    if (timer) clearTimeout(timer);
+    this.dropTimers.delete(playerId);
+    this.broadcast();
+  }
   start() {
     if (this.state.phase !== "lobby" || !this.state.settings.rounds.length)
       return;
@@ -511,6 +532,37 @@ export class HostSession extends GameSession {
         : "#ffc83d",
       spectator: Boolean(p.spectator),
     };
+  }
+  private removePlayerFromGame(playerId: string) {
+    const game = this.state.game;
+    if (!game) return;
+    game.assignments.forEach((assignment) => {
+      assignment.playerIds = assignment.playerIds.filter(
+        (id) => id !== playerId,
+      );
+      assignment.lockedPlayerIds = assignment.lockedPlayerIds.filter(
+        (id) => id !== playerId,
+      );
+      delete assignment.answers[playerId];
+      delete assignment.reactions[playerId];
+      Object.values(assignment.reactions).forEach((reactions) => {
+        const remaining = reactions.filter(
+          (reaction) => reaction.targetPlayerId !== playerId,
+        );
+        reactions.splice(0, reactions.length, ...remaining);
+      });
+    });
+    delete game.scores[playerId];
+    delete game.votes[playerId];
+    delete game.reactionTotals[playerId];
+    Object.keys(game.votes).forEach((voter) => {
+      game.votes[voter] = game.votes[voter].filter(
+        (id) => id !== playerId,
+      );
+    });
+    game.lastAwards = game.lastAwards.filter(
+      (award) => award.playerId !== playerId,
+    );
   }
   private reject(c: DataConnection, reason: string) {
     this.send(c, { type: "REJECTED", payload: { reason } });
