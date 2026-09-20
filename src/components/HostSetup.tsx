@@ -186,26 +186,80 @@ export function RoundEditor({
         <details className="settings-subsection">
           <summary>Scoring &amp; voting</summary>
           <div className="settings-grid">
-          <NumberField
-            label="Points per player vote"
-            value={round.pointsPerVote}
-            onChange={(v) => set("pointsPerVote", v)}
-          />
+          <label className="mini-field">
+            <span>Vote scoring</span>
+            <select
+              value={round.scoringMode}
+              onChange={(e) =>
+                set(
+                  "scoringMode",
+                  e.target.value as RoundSettings["scoringMode"],
+                )
+              }
+            >
+              <option value="fixed-pool">Split a fixed point pool</option>
+              <option value="per-vote">Points per vote</option>
+            </select>
+          </label>
+          {round.scoringMode === "fixed-pool" ? (
+            <>
+              <NumberField
+                label="Total vote point pool"
+                value={round.totalVotePoints}
+                onChange={(v) => set("totalVotePoints", v)}
+              />
+              {!round.combineVotes && (
+                <NumberField
+                  label="Spectator share of pool (%)"
+                  value={round.spectatorPoolPercentage}
+                  max={100}
+                  onChange={(v) => set("spectatorPoolPercentage", v)}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              <NumberField
+                label="Points per player vote"
+                value={round.pointsPerVote}
+                onChange={(v) => set("pointsPerVote", v)}
+              />
+              <NumberField
+                label="Points per spectator vote"
+                value={round.spectatorVotePoints}
+                onChange={(v) => set("spectatorVotePoints", v)}
+              />
+            </>
+          )}
           <NumberField
             label="Player bonus at %"
             value={round.playerBonusThreshold}
             max={100}
             onChange={(v) => set("playerBonusThreshold", v)}
           />
+          <label className="mini-field">
+            <span>Player bonus type</span>
+            <select
+              value={round.playerBonusMode}
+              onChange={(e) =>
+                set(
+                  "playerBonusMode",
+                  e.target.value as RoundSettings["playerBonusMode"],
+                )
+              }
+            >
+              <option value="pool-percentage">% of point pool</option>
+              <option value="fixed">Fixed points</option>
+            </select>
+          </label>
           <NumberField
-            label="Player bonus points"
+            label={
+              round.playerBonusMode === "pool-percentage"
+                ? "Player bonus (% of pool)"
+                : "Player bonus points"
+            }
             value={round.playerBonusPoints}
             onChange={(v) => set("playerBonusPoints", v)}
-          />
-          <NumberField
-            label="Points per spectator vote"
-            value={round.spectatorVotePoints}
-            onChange={(v) => set("spectatorVotePoints", v)}
           />
           <NumberField
             label="Spectator bonus at %"
@@ -214,10 +268,29 @@ export function RoundEditor({
             onChange={(v) => set("spectatorBonusThreshold", v)}
           />
           <NumberField
-            label="Spectator bonus points"
+            label={
+              round.spectatorBonusMode === "pool-percentage"
+                ? "Spectator bonus (% of pool)"
+                : "Spectator bonus points"
+            }
             value={round.spectatorBonusPoints}
             onChange={(v) => set("spectatorBonusPoints", v)}
           />
+          <label className="mini-field">
+            <span>Spectator bonus type</span>
+            <select
+              value={round.spectatorBonusMode}
+              onChange={(e) =>
+                set(
+                  "spectatorBonusMode",
+                  e.target.value as RoundSettings["spectatorBonusMode"],
+                )
+              }
+            >
+              <option value="pool-percentage">% of point pool</option>
+              <option value="fixed">Fixed points</option>
+            </select>
+          </label>
           <NumberField
             label="Votes per player"
             value={round.votesPerPlayer}
@@ -554,7 +627,8 @@ export function HostSetup({
                 }
               />
               <Toggle
-                label="Allow late joins"
+                label="Allow players to join active games"
+                hint="Late players can vote immediately and answer starting next round."
                 checked={settings.lateJoin}
                 onChange={(v) => setSettings({ ...settings, lateJoin: v })}
               />
@@ -570,6 +644,14 @@ export function HostSetup({
                 checked={settings.revealAuthorsAfterVoting}
                 onChange={(v) =>
                   setSettings({ ...settings, revealAuthorsAfterVoting: v })
+                }
+              />
+              <Toggle
+                label="Reveal who voted for each answer"
+                hint="Voter choices appear only after the result is revealed."
+                checked={settings.revealVotersAfterVoting}
+                onChange={(v) =>
+                  setSettings({ ...settings, revealVotersAfterVoting: v })
                 }
               />
             </div>

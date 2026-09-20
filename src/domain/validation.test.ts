@@ -2,17 +2,20 @@ import { describe, expect, it } from "vitest";
 import { createRound, defaultGameTemplate, starterPack } from "./defaults";
 import { SettingsValidator } from "./validation";
 import { GameEngine } from "./gameEngine";
-import type { GameRuntime } from "./types";
+import type { GameRuntime, LobbySnapshot } from "./types";
 import { HostSession } from "../network/session";
 
 describe("SettingsValidator", () => {
   it("loads built-ins from export-compatible resources", () => {
     expect(defaultGameTemplate.id).toBe("default-game");
     expect(defaultGameTemplate.rounds[0].playerBonusThreshold).toBe(100);
+    expect(defaultGameTemplate.rounds[0].scoringMode).toBe("fixed-pool");
+    expect(defaultGameTemplate.rounds[0].totalVotePoints).toBe(1000);
     expect(defaultGameTemplate.reactionPoints.brilliant).toBe(5);
     expect(defaultGameTemplate.reactionPoints.blunder).toBe(-5);
     expect(defaultGameTemplate.maxReactionsPerPlayer).toBe("unlimited");
     expect(defaultGameTemplate.maxReactionsPerTarget).toBe(1);
+    expect(defaultGameTemplate.revealVotersAfterVoting).toBe(true);
     expect(
       defaultGameTemplate.rounds.every(
         (round) => round.endVotingWhenAllVotesIn,
@@ -22,6 +25,64 @@ describe("SettingsValidator", () => {
     expect(
       starterPack.prompts.every((prompt) => prompt.safetyQuips.length > 0),
     ).toBe(true);
+  });
+
+  it("hides voter identities until results and respects voter privacy", () => {
+    const players = ["a", "b", "c"].map((id) => ({
+        id,
+        name: id.toUpperCase(),
+        avatar: "✦",
+        avatarColor: "#ffc83d",
+        connected: true,
+        spectator: false,
+        isHost: id === "a",
+      })),
+      state: LobbySnapshot = {
+        roomCode: "ABC123",
+        players,
+        settings: structuredClone(defaultGameTemplate),
+        selectedPackIds: [starterPack.id],
+        phase: "voting",
+        serverTime: 0,
+        game: {
+          roundIndex: 0,
+          voteIndex: 0,
+          votes: { a: ["b"], c: ["b", "b"] },
+          scores: { a: 0, b: 0, c: 0 },
+          reactionTotals: { a: {}, b: {}, c: {} },
+          scoredAssignmentIds: [],
+          lastAwards: [],
+          assignments: [
+            {
+              id: "matchup",
+              prompt: { id: "prompt", text: "Prompt", safetyQuips: [] },
+              playerIds: ["a", "b"],
+              answers: { a: "A", b: "B" },
+              lockedPlayerIds: ["a", "b"],
+              reactions: {},
+            },
+          ],
+        },
+      },
+      session = Object.create(HostSession.prototype) as {
+        state: LobbySnapshot;
+      },
+      viewFor = (
+        HostSession.prototype as unknown as {
+          viewFor(playerId: string): LobbySnapshot;
+        }
+      ).viewFor;
+    session.state = state;
+    expect(viewFor.call(session, "a").game?.votes).toEqual({ a: ["b"] });
+
+    state.phase = "results";
+    expect(viewFor.call(session, "a").game?.votes).toEqual(state.game?.votes);
+
+    state.settings.revealVotersAfterVoting = false;
+    const privateVotes = viewFor.call(session, "a").game?.votes ?? {};
+    expect(Object.keys(privateVotes).every((id) => id.startsWith("anonymous-")))
+      .toBe(true);
+    expect(Object.values(privateVotes).flat()).toHaveLength(3);
   });
   it("warns when assignments cannot be divided evenly", () => {
     const round = {
@@ -126,6 +187,7 @@ describe("SettingsValidator", () => {
   it("applies player and spectator vote points independently", () => {
     const round = {
       ...createRound(),
+      scoringMode: "per-vote" as const,
       playerBonusThreshold: 101,
       spectatorBonusThreshold: 101,
     };
@@ -201,6 +263,152 @@ describe("SettingsValidator", () => {
     expect(game.scores.a).toBe(
       round.pointsPerVote + round.spectatorVotePoints + 5,
     );
+  });
+
+  it("splits a fixed point pool between player and spectator ballots", () => {
+    const round = {
+        ...createRound(),
+        scoringMode: "fixed-pool" as const,
+        totalVotePoints: 1000,
+        spectatorPoolPercentage: 20,
+        playerBonusThreshold: 101,
+        spectatorBonusThreshold: 101,
+      },
+      game: GameRuntime = {
+        roundIndex: 0,
+        voteIndex: 0,
+        scores: { a: 0, b: 0 },
+        reactionTotals: { a: {}, b: {} },
+        votes: { c: ["a"], d: ["b"], s1: ["a"], s2: ["a"] },
+        scoredAssignmentIds: [],
+        lastAwards: [],
+        assignments: [
+          {
+            id: "fixed-pool",
+            prompt: { id: "p", text: "q", safetyQuips: [] },
+            playerIds: ["a", "b"],
+            answers: { a: "A", b: "B" },
+            lockedPlayerIds: ["a", "b"],
+            reactions: {},
+          },
+        ],
+      },
+      players = [
+        ...["a", "b", "c", "d"].map((id) => ({
+          id,
+          name: id,
+          avatar: "✦",
+          avatarColor: "#fff",
+          connected: true,
+          spectator: false,
+          isHost: false,
+        })),
+        ...["s1", "s2"].map((id) => ({
+          id,
+          name: id,
+          avatar: "★",
+          avatarColor: "#fff",
+          connected: true,
+          spectator: true,
+          isHost: false,
+        })),
+      ];
+    const awards = GameEngine.scoreCurrent(game, round, players);
+    expect(awards.find((award) => award.playerId === "a")?.votePoints).toBe(
+      600,
+    );
+    expect(awards.find((award) => award.playerId === "b")?.votePoints).toBe(
+      400,
+    );
+    expect(awards.reduce((sum, award) => sum + award.votePoints, 0)).toBe(
+      1000,
+    );
+  });
+
+  it("uses the full fixed pool when only one voter group casts ballots", () => {
+    const round = {
+        ...createRound(),
+        scoringMode: "fixed-pool" as const,
+        totalVotePoints: 999,
+        playerBonusThreshold: 101,
+        spectatorBonusThreshold: 101,
+      },
+      game: GameRuntime = {
+        roundIndex: 0,
+        voteIndex: 0,
+        scores: { a: 0, b: 0 },
+        reactionTotals: { a: {}, b: {} },
+        votes: { c: ["a"], d: ["b"] },
+        scoredAssignmentIds: [],
+        lastAwards: [],
+        assignments: [
+          {
+            id: "player-only-pool",
+            prompt: { id: "p", text: "q", safetyQuips: [] },
+            playerIds: ["a", "b"],
+            answers: { a: "A", b: "B" },
+            lockedPlayerIds: ["a", "b"],
+            reactions: {},
+          },
+        ],
+      },
+      players = ["a", "b", "c", "d"].map((id) => ({
+        id,
+        name: id,
+        avatar: "✦",
+        avatarColor: "#fff",
+        connected: true,
+        spectator: false,
+        isHost: false,
+      }));
+    const awards = GameEngine.scoreCurrent(game, round, players);
+    expect(awards.reduce((sum, award) => sum + award.votePoints, 0)).toBe(999);
+  });
+
+  it("calculates percentage bonuses from the configured pool", () => {
+    const round = {
+        ...createRound(),
+        scoringMode: "fixed-pool" as const,
+        totalVotePoints: 1000,
+        playerBonusThreshold: 100,
+        playerBonusMode: "pool-percentage" as const,
+        playerBonusPoints: 25,
+        spectatorBonusThreshold: 101,
+      },
+      game: GameRuntime = {
+        roundIndex: 0,
+        voteIndex: 0,
+        scores: { a: 0, b: 0 },
+        reactionTotals: { a: {}, b: {} },
+        votes: { c: ["a"], d: ["a"] },
+        scoredAssignmentIds: [],
+        lastAwards: [],
+        assignments: [
+          {
+            id: "percentage-bonus",
+            prompt: { id: "p", text: "q", safetyQuips: [] },
+            playerIds: ["a", "b"],
+            answers: { a: "A", b: "B" },
+            lockedPlayerIds: ["a", "b"],
+            reactions: {},
+          },
+        ],
+      },
+      players = ["a", "b", "c", "d"].map((id) => ({
+        id,
+        name: id,
+        avatar: "✦",
+        avatarColor: "#fff",
+        connected: true,
+        spectator: false,
+        isHost: false,
+      }));
+    const winner = GameEngine.scoreCurrent(game, round, players).find(
+      (award) => award.playerId === "a",
+    );
+    expect(winner?.votePoints).toBe(1000);
+    expect(winner?.bonusPoints).toBe(250);
+    expect(winner?.total).toBe(1250);
   });
 
   it("does not leave the matchup index past the final assignment", () => {

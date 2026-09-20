@@ -82,6 +82,7 @@ const normalizeGame = (
     fullRoomFallback: value.fullRoomFallback ?? "spectator",
     showAuthorsBeforeVoting: value.showAuthorsBeforeVoting ?? false,
     revealAuthorsAfterVoting: value.revealAuthorsAfterVoting ?? true,
+    revealVotersAfterVoting: value.revealVotersAfterVoting ?? true,
     scoreboardTimeSeconds: value.scoreboardTimeSeconds ?? 10,
     maxReactionsPerPlayer:
       value.maxReactionsPerPlayer == null
@@ -108,6 +109,14 @@ const normalizeGame = (
           ...structuredClone(defaultGameTemplate.rounds[0]),
           ...round,
           id: round.id || crypto.randomUUID(),
+          scoringMode: round.scoringMode ?? "per-vote",
+          totalVotePoints: Math.max(0, round.totalVotePoints ?? 1000),
+          spectatorPoolPercentage: Math.min(
+            100,
+            Math.max(0, round.spectatorPoolPercentage ?? 20),
+          ),
+          playerBonusMode: round.playerBonusMode ?? "fixed",
+          spectatorBonusMode: round.spectatorBonusMode ?? "fixed",
           resultsTimeSeconds: round.resultsTimeSeconds ?? 8,
           revealStyle: round.revealStyle ?? "one-at-a-time",
           revealTimeSeconds: round.revealTimeSeconds ?? 1.2,

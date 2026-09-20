@@ -671,6 +671,20 @@ export class HostSession extends GameSession {
         );
       });
     }
+    if (snapshot.game && snapshot.phase === "voting") {
+      const ownVotes = snapshot.game.votes[playerId];
+      snapshot.game.votes = ownVotes ? { [playerId]: ownVotes } : {};
+    } else if (
+      snapshot.game &&
+      !snapshot.settings.revealVotersAfterVoting
+    ) {
+      snapshot.game.votes = Object.fromEntries(
+        Object.values(snapshot.game.votes).map((votes, index) => [
+          `anonymous-voter-${index}`,
+          votes,
+        ]),
+      );
+    }
     return snapshot;
   }
 }

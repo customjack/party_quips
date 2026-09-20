@@ -31,16 +31,19 @@ import { createRound, createSpecialRound } from "../domain/defaults";
 import { RulesEditor } from "./RulesEditor";
 const Toggle = ({
   label,
+  hint,
   checked,
   onChange,
 }: {
   label: string;
+  hint?: string;
   checked: boolean;
   onChange: (v: boolean) => void;
 }) => (
   <label className="toggle-row">
     <span>
       <b>{label}</b>
+      {hint && <small>{hint}</small>}
     </span>
     <input
       type="checkbox"
@@ -464,7 +467,8 @@ function LobbySettings({
             onChange={(v) => set("allowSpectators", v)}
           />
           <Toggle
-            label="Allow late join"
+            label="Allow players to join active games"
+            hint="Late players can vote immediately and answer starting next round."
             checked={s.lateJoin}
             onChange={(v) => set("lateJoin", v)}
           />
@@ -477,6 +481,12 @@ function LobbySettings({
             label="Reveal authors after voting"
             checked={s.revealAuthorsAfterVoting}
             onChange={(v) => set("revealAuthorsAfterVoting", v)}
+          />
+          <Toggle
+            label="Reveal who voted for each answer"
+            hint="Voter choices appear only after the result is revealed."
+            checked={s.revealVotersAfterVoting}
+            onChange={(v) => set("revealVotersAfterVoting", v)}
           />
         </div>
         <h3>Prompt packs</h3>
@@ -602,16 +612,78 @@ function LobbySettings({
                 />
               </label>
               <label className="mini-field">
-                <span>Points per vote</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={r.pointsPerVote}
+                <span>Vote scoring</span>
+                <select
+                  value={r.scoringMode}
                   onChange={(e) =>
-                    round(i, { pointsPerVote: Number(e.target.value) })
+                    round(i, {
+                      scoringMode: e.target
+                        .value as RoundSettings["scoringMode"],
+                    })
                   }
-                />
+                >
+                  <option value="fixed-pool">Fixed point pool</option>
+                  <option value="per-vote">Points per vote</option>
+                </select>
               </label>
+              {r.scoringMode === "fixed-pool" ? (
+                <>
+                  <label className="mini-field">
+                    <span>Total vote point pool</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={r.totalVotePoints}
+                      onChange={(e) =>
+                        round(i, { totalVotePoints: Number(e.target.value) })
+                      }
+                    />
+                  </label>
+                  {!r.combineVotes && (
+                    <label className="mini-field">
+                      <span>Spectator share (%)</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={r.spectatorPoolPercentage}
+                        onChange={(e) =>
+                          round(i, {
+                            spectatorPoolPercentage: Number(e.target.value),
+                          })
+                        }
+                      />
+                    </label>
+                  )}
+                </>
+              ) : (
+                <>
+                  <label className="mini-field">
+                    <span>Points per player vote</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={r.pointsPerVote}
+                      onChange={(e) =>
+                        round(i, { pointsPerVote: Number(e.target.value) })
+                      }
+                    />
+                  </label>
+                  <label className="mini-field">
+                    <span>Points per spectator vote</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={r.spectatorVotePoints}
+                      onChange={(e) =>
+                        round(i, {
+                          spectatorVotePoints: Number(e.target.value),
+                        })
+                      }
+                    />
+                  </label>
+                </>
+              )}
               <label className="mini-field">
                 <span>Prompts per player</span>
                 <select
@@ -660,7 +732,26 @@ function LobbySettings({
                 />
               </label>
               <label className="mini-field">
-                <span>Player bonus points</span>
+                <span>Player bonus type</span>
+                <select
+                  value={r.playerBonusMode}
+                  onChange={(e) =>
+                    round(i, {
+                      playerBonusMode: e.target
+                        .value as RoundSettings["playerBonusMode"],
+                    })
+                  }
+                >
+                  <option value="pool-percentage">% of point pool</option>
+                  <option value="fixed">Fixed points</option>
+                </select>
+              </label>
+              <label className="mini-field">
+                <span>
+                  {r.playerBonusMode === "pool-percentage"
+                    ? "Player bonus (% of pool)"
+                    : "Player bonus points"}
+                </span>
                 <input
                   type="number"
                   min="0"
@@ -671,13 +762,48 @@ function LobbySettings({
                 />
               </label>
               <label className="mini-field">
-                <span>Spectator vote points</span>
+                <span>Spectator bonus at %</span>
                 <input
                   type="number"
                   min="0"
-                  value={r.spectatorVotePoints}
+                  max="100"
+                  value={r.spectatorBonusThreshold}
                   onChange={(e) =>
-                    round(i, { spectatorVotePoints: Number(e.target.value) })
+                    round(i, {
+                      spectatorBonusThreshold: Number(e.target.value),
+                    })
+                  }
+                />
+              </label>
+              <label className="mini-field">
+                <span>Spectator bonus type</span>
+                <select
+                  value={r.spectatorBonusMode}
+                  onChange={(e) =>
+                    round(i, {
+                      spectatorBonusMode: e.target
+                        .value as RoundSettings["spectatorBonusMode"],
+                    })
+                  }
+                >
+                  <option value="pool-percentage">% of point pool</option>
+                  <option value="fixed">Fixed points</option>
+                </select>
+              </label>
+              <label className="mini-field">
+                <span>
+                  {r.spectatorBonusMode === "pool-percentage"
+                    ? "Spectator bonus (% of pool)"
+                    : "Spectator bonus points"}
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  value={r.spectatorBonusPoints}
+                  onChange={(e) =>
+                    round(i, {
+                      spectatorBonusPoints: Number(e.target.value),
+                    })
                   }
                 />
               </label>

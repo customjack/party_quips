@@ -61,15 +61,22 @@ export type PromptPack = {
 export type GroupingStrategy = "balanced" | "random" | "round-robin";
 export type RevealStyle = "all-at-once" | "one-at-a-time";
 export type VoteAllocation = "one-per-answer" | "stacked";
+export type VoteScoringMode = "fixed-pool" | "per-vote";
+export type BonusValueMode = "fixed" | "pool-percentage";
 export type RoundSettings = {
   id: string;
   name: string;
+  scoringMode: VoteScoringMode;
+  totalVotePoints: number;
+  spectatorPoolPercentage: number;
   pointsPerVote: number;
   playerBonusThreshold: number;
   playerBonusPoints: number;
+  playerBonusMode: BonusValueMode;
   spectatorVotePoints: number;
   spectatorBonusThreshold: number;
   spectatorBonusPoints: number;
+  spectatorBonusMode: BonusValueMode;
   combineVotes: boolean;
   votesPerPlayer: number;
   voteAllocation: VoteAllocation;
@@ -97,6 +104,7 @@ export type GameSettings = {
   fullRoomFallback: "spectator" | "reject";
   showAuthorsBeforeVoting: boolean;
   revealAuthorsAfterVoting: boolean;
+  revealVotersAfterVoting: boolean;
   scoreboardTimeSeconds: number;
   maxReactionsPerPlayer: ReactionLimit;
   maxReactionsPerTarget: ReactionLimit;

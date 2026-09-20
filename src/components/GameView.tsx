@@ -370,6 +370,17 @@ export function GameView({
                 (selectedId) => selectedId === id,
               ).length,
               award = awards[id],
+              voters = Object.entries(game.votes).flatMap(
+                ([voterId, choices]) => {
+                  const votes = choices.filter(
+                      (answerPlayerId) => answerPlayerId === id,
+                    ).length,
+                    player = snapshot.players.find(
+                      (item) => item.id === voterId,
+                    );
+                  return votes && player ? [{ player, votes }] : [];
+                },
+              ),
               revealDelay =
                 isReveal && round.revealStyle === "one-at-a-time"
                   ? index * round.revealTimeSeconds
@@ -406,7 +417,13 @@ export function GameView({
               const removeAt = selected.lastIndexOf(id);
               if (removeAt >= 0)
                 setSelected(selected.filter((_, i) => i !== removeAt));
-            };
+              },
+              canVoteForAnswer =
+                isVoting && !hasVoted && !cannotVote && id !== me?.id,
+              canAddVote =
+                canVoteForAnswer &&
+                selected.length < maxVotes &&
+                allocated < perAnswerLimit;
             return (
               <article
                 className={`${allocated ? "selected" : ""} ${isReveal ? "revealing" : ""} ${isResults ? "has-results" : ""} ${isResults && winningVotes > 0 && (counts[id] ?? 0) === winningVotes ? "result-winner" : ""}`}
@@ -414,20 +431,14 @@ export function GameView({
                 key={id}
                 onContextMenu={(event) => {
                   event.preventDefault();
-                  if (isVoting && !hasVoted && !cannotVote) removeVote();
+                  if (canVoteForAnswer) removeVote();
                 }}
               >
                 <button
                   className="answer-choice"
-                  disabled={
-                    !isVoting || hasVoted || cannotVote || id === me?.id
-                  }
+                  disabled={!canVoteForAnswer}
                   onClick={() => {
-                    if (
-                      selected.length < maxVotes &&
-                      allocated < perAnswerLimit
-                    )
-                      setSelected([...selected, id]);
+                    if (canAddVote) setSelected([...selected, id]);
                   }}
                 >
                   <span>{answer}</span>
@@ -439,12 +450,14 @@ export function GameView({
                         ?.name ?? "Player"}
                     </b>
                   )}
-                  {isVoting && !hasVoted && !cannotVote && (
+                  {canVoteForAnswer && allocated > 0 && (
                     <small>
-                      {allocated
-                        ? `${allocated} vote${allocated === 1 ? "" : "s"} · right-click to remove`
-                        : "Left-click to add"}
+                      {allocated} vote{allocated === 1 ? "" : "s"} · {canAddVote &&
+                        "left-click to add · "}right-click to remove
                     </small>
+                  )}
+                  {canAddVote && allocated === 0 && (
+                    <small>Left-click to add</small>
                   )}
                 </button>
                 {isResults && (
@@ -463,6 +476,26 @@ export function GameView({
                         )}
                       </span>
                     )}
+                  </div>
+                )}
+                {isResults && snapshot.settings.revealVotersAfterVoting && (
+                  <div className="voter-breakdown">
+                    <small>Voted for this answer</small>
+                    <div>
+                      {voters.length ? (
+                        voters.map(({ player, votes }) => (
+                          <span className="voter-chip" key={player.id}>
+                            <i style={{ backgroundColor: player.avatarColor }}>
+                              {player.avatar}
+                            </i>
+                            <b>{player.name}</b>
+                            {votes > 1 && <em>×{votes}</em>}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="no-voters">No votes</span>
+                      )}
+                    </div>
                   </div>
                 )}
                 {!isReveal && canReact && (

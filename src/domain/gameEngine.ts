@@ -110,6 +110,61 @@ export class GameEngine {
         0,
       ),
       totalVotes = playerVoteTotal + spectatorVoteTotal;
+    const fixedVotePoints: Record<string, number> = {};
+    if (round.scoringMode === "fixed-pool") {
+      const pointPool = Math.max(0, Math.round(round.totalVotePoints));
+      if (round.combineVotes) {
+        const combinedVotes = Object.fromEntries(
+          a.playerIds.map((id) => [
+            id,
+            (playerVotes[id] ?? 0) + (spectatorVotes[id] ?? 0),
+          ]),
+        );
+        Object.assign(
+          fixedVotePoints,
+          this.allocateVotePool(a.playerIds, combinedVotes, pointPool),
+        );
+      } else {
+        const playerPool =
+            playerVoteTotal && spectatorVoteTotal
+              ? pointPool -
+                Math.round(
+                  (pointPool *
+                    Math.min(100, Math.max(0, round.spectatorPoolPercentage))) /
+                    100,
+                )
+              : playerVoteTotal
+                ? pointPool
+                : 0,
+          spectatorPool =
+            playerVoteTotal && spectatorVoteTotal
+              ? pointPool - playerPool
+              : spectatorVoteTotal
+                ? pointPool
+                : 0,
+          playerPoints = this.allocateVotePool(
+            a.playerIds,
+            playerVotes,
+            playerPool,
+          ),
+          spectatorPoints = this.allocateVotePool(
+            a.playerIds,
+            spectatorVotes,
+            spectatorPool,
+          );
+        a.playerIds.forEach((id) => {
+          fixedVotePoints[id] =
+            (playerPoints[id] ?? 0) + (spectatorPoints[id] ?? 0);
+        });
+      }
+    }
+    const bonusValue = (
+      mode: RoundSettings["playerBonusMode"],
+      value: number,
+    ) =>
+      mode === "pool-percentage"
+        ? Math.round((Math.max(0, round.totalVotePoints) * value) / 100)
+        : value;
     const awards = a.playerIds.map((id) => {
       const pv = playerVotes[id] ?? 0,
         sv = spectatorVotes[id] ?? 0,
@@ -122,16 +177,18 @@ export class GameEngine {
         (!round.combineVotes &&
           playerVoteTotal > 0 &&
           (pv / playerVoteTotal) * 100 >= round.playerBonusThreshold)
-          ? round.playerBonusPoints
+          ? bonusValue(round.playerBonusMode, round.playerBonusPoints)
           : 0;
       const sb =
         !round.combineVotes &&
         spectatorVoteTotal > 0 &&
         (sv / spectatorVoteTotal) * 100 >= round.spectatorBonusThreshold
-          ? round.spectatorBonusPoints
+          ? bonusValue(round.spectatorBonusMode, round.spectatorBonusPoints)
           : 0;
       const votePoints =
-          pv * round.pointsPerVote + sv * round.spectatorVotePoints,
+          round.scoringMode === "fixed-pool"
+            ? (fixedVotePoints[id] ?? 0)
+            : pv * round.pointsPerVote + sv * round.spectatorVotePoints,
         bonusPoints = pb + sb,
         reactionPoints = Object.values(a.reactions)
           .flat()
@@ -156,6 +213,32 @@ export class GameEngine {
     game.scoredAssignmentIds.push(a.id);
     game.lastAwards = awards;
     return awards;
+  }
+  private static allocateVotePool(
+    playerIds: string[],
+    votes: Record<string, number>,
+    pointPool: number,
+  ) {
+    const totalVotes = playerIds.reduce((sum, id) => sum + (votes[id] ?? 0), 0),
+      points = Object.fromEntries(playerIds.map((id) => [id, 0]));
+    if (!totalVotes || pointPool <= 0) return points;
+    const shares = playerIds.map((id, index) => {
+      const exact = (pointPool * (votes[id] ?? 0)) / totalVotes;
+      return { id, index, points: Math.floor(exact), remainder: exact % 1 };
+    });
+    let remaining = pointPool - shares.reduce((sum, share) => sum + share.points, 0);
+    [...shares]
+      .sort((a, b) => b.remainder - a.remainder || a.index - b.index)
+      .forEach((share) => {
+        if (remaining > 0 && (votes[share.id] ?? 0) > 0) {
+          share.points += 1;
+          remaining -= 1;
+        }
+      });
+    shares.forEach((share) => {
+      points[share.id] = share.points;
+    });
+    return points;
   }
   private static shuffle<T>(items: T[]) {
     const copy = [...items];

@@ -262,7 +262,8 @@ export function RulesEditor({
                   }
                 />
                 <Toggle
-                  label="Allow late joins"
+                  label="Allow players to join active games"
+                  hint="Late players can vote immediately and answer starting next round."
                   checked={settings.lateJoin}
                   onChange={(lateJoin) => onSettings({ ...settings, lateJoin })}
                 />
@@ -306,6 +307,14 @@ export function RulesEditor({
                   checked={settings.revealAuthorsAfterVoting}
                   onChange={(revealAuthorsAfterVoting) =>
                     onSettings({ ...settings, revealAuthorsAfterVoting })
+                  }
+                />
+                <Toggle
+                  label="Reveal who voted for each answer"
+                  hint="Voter choices appear only after the result is revealed."
+                  checked={settings.revealVotersAfterVoting}
+                  onChange={(revealVotersAfterVoting) =>
+                    onSettings({ ...settings, revealVotersAfterVoting })
                   }
                 />
               </div>
